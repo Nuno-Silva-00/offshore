@@ -1,0 +1,46 @@
+networks:
+  default:
+    name: ${NETWORK}
+    external: true
+
+volumes:
+  sqlite_data:
+  media_data:
+
+services:
+  pdfding:
+    container_name: pdfding
+    image: mrmn/pdfding:latest
+    restart: unless-stopped
+
+    volumes:
+      - sqlite_data:/home/nonroot/pdfding/db
+      - media_data:/home/nonroot/pdfding/media
+
+    environment:
+      - DEFAULT_THEME=${DEFAULT_THEME:-dark}
+      - DEFAULT_THEME_COLOR=${DEFAULT_THEME_COLOR:-green}
+      - SECRET_KEY=${SECRET_KEY:-some_long_random_secret}
+      # the domain where you want to access PdfDing, e.g. pdfding.com
+      - HOST_NAME=${SUB_DOMAIN}.${DOMAIN}
+      # In production set the following values to True
+      - CSRF_COOKIE_SECURE=TRUE
+      - SESSION_COOKIE_SECURE=TRUE
+      - DISABLE_USER_SIGNUP=TRUE
+      - ALLOW_PDF_SUB_DIRECTORIES=TRUE
+      # SMTP Config
+      - EMAIL_BACKEND=SMTP
+      - EMAIL_ADDRESS=${EMAIL_ADDRESS}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=465
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_USE_TLS=TRUE
+    
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pdfding.rule=Host(`${SUB_DOMAIN}.${DOMAIN}`)"
+      - "traefik.http.routers.pdfding.entrypoints=websecure"
+      - "traefik.http.routers.pdfding.tls.certresolver=cloudflare"
+      - "traefik.http.services.pdfding.loadbalancer.server.port=8000"
+

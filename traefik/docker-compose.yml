@@ -1,0 +1,31 @@
+networks:
+  default:
+    name: ${NETWORK}
+    external: true
+
+services:
+  traefik:
+    image: traefik:v3.6
+    container_name: traefik
+    restart: unless-stopped
+    
+    environment:
+      - CLOUDFLARE_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
+      - CLOUDFLARE_API_EMAIL=${CF_API_EMAIL}
+
+    ports:
+      - 80:80
+      - 443:443
+  
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.yml:/traefik.yml:ro
+      - ./acme.json:/acme.json
+    
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik.rule=Host(`${SUB_DOMAIN}.${DOMAIN}`)
+      - traefik.http.routers.traefik.entrypoints=websecure
+      - traefik.http.routers.traefik.service=api@internal
+      - traefik.http.routers.traefik.tls.certresolver=cloudflare
+      - label com.docker.compose.network=default
