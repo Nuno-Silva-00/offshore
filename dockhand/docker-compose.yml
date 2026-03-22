@@ -1,0 +1,32 @@
+networks:
+  default:
+    name: ${NETWORK}
+    external: true
+
+volumes:
+  dockhand_data:
+
+services:
+  dockhand:
+    image: fnsys/dockhand:latest
+    container_name: dockhand
+    restart: unless-stopped
+
+    user: "0:0"
+
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - dockhand_data:/app/data
+      - /home/ubuntu/docker:/mnt/docker
+
+    environment:
+      - PUID=1001
+      - PGID=1001
+    
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dockhand.rule=Host(`${SUB_DOMAIN}.${DOMAIN}`)"
+      - "traefik.http.routers.dockhand.entrypoints=websecure"
+      - "traefik.http.routers.dockhand.tls.certresolver=cloudflare"
+      - "traefik.http.services.dockhand.loadbalancer.server.port=3000"

@@ -1,0 +1,22 @@
+volumes:
+  minecraft_data:
+    name: minecraft_data
+
+services:
+  minecraft:
+    image: ghcr.io/fabioazevedo0619/allthemods10:latest
+    container_name: minecraft
+    restart: unless-stopped
+
+    volumes:
+      - minecraft_data:/data
+    
+    ports:
+      - 25565:25565
+
+    environment:
+      EULA: true
+      ONLINE_MODE: false
+      OP_USERS: ${OP_USERS}
+      ALLOW_FLIGHT: true
+

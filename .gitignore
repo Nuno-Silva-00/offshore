@@ -1,0 +1,12 @@
+## Secrets
+.env
+
+## Code Configs
+/code/config
+appconfig
+## until all secrets are resolved 
+code 
+
+## Traefik
+acme.json
+traefik.yml

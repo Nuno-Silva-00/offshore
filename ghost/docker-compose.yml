@@ -1,0 +1,62 @@
+networks:
+  default:
+    name: ${NETWORK}
+    external: true
+
+volumes:
+  mysql_data:
+    name: mysql_data
+  ghost_data:
+    name: ghost_data
+
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    restart: unless-stopped
+
+    environment:
+      TZ: Europe/Lisbon
+
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+    volumes:
+        - mysql_data:/var/lib/mysql
+
+  ghost:
+    image: ghost
+    container_name: ghost
+    restart: unless-stopped
+
+    environment:
+      url: ${GHOST_URL}
+
+      database__client: mysql
+      database__connection__host: mysql
+      database__connection__user: ${MYSQL_USER}
+      database__connection__password: ${MYSQL_PASSWORD}
+      database__connection__database: ${MYSQL_DATABASE}
+
+      mail__transport: SMTP
+      mail__options__host: ${SMTP_HOST}
+      mail__options__port: ${SMT_PORT}
+      mail__options__secure: true
+      mail__options__auth__user: ${SMTP_USER}
+      mail__options__auth__pass: ${SMTP_PASSWORD}
+      mail__from: ${SMTP_FROM}
+
+    volumes:
+      - ghost_data:/var/lib/ghost/content
+
+    depends_on:
+      - mysql
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ghost.rule=Host(`${SUB_DOMAIN}.${DOMAIN}`)"
+      - "traefik.http.routers.ghost.entrypoints=websecure"
+      - "traefik.http.routers.ghost.tls.certresolver=cloudflare"
+      - "traefik.http.services.ghost.loadbalancer.server.port=2368"
